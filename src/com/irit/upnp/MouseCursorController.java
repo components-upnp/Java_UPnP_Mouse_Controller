@@ -31,14 +31,29 @@ public class MouseCursorController {
     @UpnpStateVariable(name = "Commande", defaultValue = "")
     public String commande = "";
 
-    @UpnpAction(name = "SetCommande")
-    public void setCommande(@UpnpInputArgument(name = "NewCommandeValue") String c) throws IOException, SAXException, ParserConfigurationException {
+    @UpnpAction(name = "SetXYPercent")
+    public void setXYPercent(@UpnpInputArgument(name = "Commande") String c) throws IOException, SAXException, ParserConfigurationException {
         commande = c;
+        System.out.println("Commande reçue : " + commande);
         LecteurXml l = new LecteurXml(commande);
-        HashMap<String,Integer> args = new HashMap<>();
+        HashMap<String,Float> args = new HashMap<>();
         args.put("X",l.getX());
         args.put("Y",l.getY());
 
         getPropertyChangeSupport().firePropertyChange("commande","",args);
+    }
+
+    @UpnpAction(name = "SubXY")
+    public void subXY(@UpnpInputArgument(name = "Commande") String c) throws IOException, SAXException, ParserConfigurationException {
+        commande = c;
+        System.out.println("Commande reçue : " + commande);
+
+        LecteurXml l = new LecteurXml(commande);
+
+        HashMap<String,Float> args = new HashMap<>();
+        args.put("X",l.getX());
+        args.put("Y",l.getY());
+
+        getPropertyChangeSupport().firePropertyChange("commandeSub", "", args);
     }
 }

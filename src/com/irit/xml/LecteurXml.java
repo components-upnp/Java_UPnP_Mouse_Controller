@@ -16,8 +16,8 @@ import java.io.StringReader;
  */
 public class LecteurXml {
 
-    private int x, y;
-    private String udn;
+    private float x, y;
+    private String udn, commande;
 
     public LecteurXml(String xml) throws ParserConfigurationException, SAXException, IOException {
 
@@ -29,6 +29,7 @@ public class LecteurXml {
             boolean isUdn = false;
             boolean isX = false;
             boolean isY = false;
+            boolean isCommande = false;
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attributes) {
@@ -41,13 +42,12 @@ public class LecteurXml {
                 if (qName.equalsIgnoreCase("Y")) {
                     isY = true;
                 }
+                if (qName.equalsIgnoreCase("Commande")) {
+                    isCommande = true;
+                }
             }
 
             @Override
-            public void endElement(String uri, String localName, String qName) {
-
-            }
-
             public void characters(char ch[], int start, int length) {
                 if (isUdn) {
                     isUdn = false;
@@ -55,11 +55,19 @@ public class LecteurXml {
                 }
                 if (isX) {
                     isX = false;
-                    x = Integer.getInteger(new String(ch, start, length));
+                    String temp = new String(ch, start, length);
+                    System.out.println(temp);
+                    x =  Float.parseFloat(temp);
                 }
                 if (isY) {
                     isY = false;
-                    y = Integer.getInteger(new String(ch, start, length));
+                    String temp = new String(ch, start, length);
+                    System.out.println(temp);
+                    y = Float.parseFloat(temp);
+                }
+                if (isCommande) {
+                    isCommande = false;
+                    commande = new String(ch, start, length);
                 }
             }
         };
@@ -70,11 +78,15 @@ public class LecteurXml {
         return udn;
     }
 
-    public int getX() {
+    public float getX() {
         return x;
     }
 
-    public int getY() {
+    public float getY() {
         return y;
+    }
+
+    public String getCommande() {
+        return commande;
     }
 }

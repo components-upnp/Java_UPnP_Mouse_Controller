@@ -11,6 +11,9 @@ import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
 
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
 /**
@@ -22,12 +25,16 @@ public class MouseControllerServer implements Runnable {
     private LocalService<MouseButtonsController> mouseButtonsService;
     private Dimension sizeScreen;
     private Robot robot;
+    private float xCursor,yCursor;
 
     public void run() {
         try {
 
             sizeScreen = Toolkit.getDefaultToolkit().getScreenSize();
             robot = new Robot();
+
+            xCursor = sizeScreen.width / 2;
+            yCursor = sizeScreen.height / 2;
 
             final UpnpService upnpService = new UpnpServiceImpl();
 
@@ -40,16 +47,46 @@ public class MouseControllerServer implements Runnable {
                     .getPropertyChangeSupport().addPropertyChangeListener(
                     evt -> {
                         if (evt.getPropertyName().equals("commande")) {
-                            HashMap<String, Integer> args = (HashMap<String, Integer>) evt.getNewValue();
-                            int x = args.get("X");
-                            int y = args.get("Y");
+                            HashMap<String, Float> args = (HashMap<String, Float>) evt.getNewValue();
+                            float x = args.get("X");
+                            float y = args.get("Y");
 
                             System.out.println("X : " + x + " Y : " + y);
+                            System.out.println("height : " + sizeScreen.height + " width : " + sizeScreen.width);
+                            float valX = sizeScreen.width*(x/100);
+                            float valY = sizeScreen.height*(y/100);
+                            System.out.println("X : " + valX + " Y : " + valY);
 
-                            robot.mouseMove(sizeScreen.height*(x/100), sizeScreen.width*(y/100));
+                            robot.mouseMove(Math.round(valX), Math.round(valY));
+                        }
+
+                        if (evt.getPropertyName().equals("commandeSub")) {
+                            HashMap<String, Float> args = (HashMap<String, Float>) evt.getNewValue();
+                            float x = -(args.get("X") * 10);
+                            float y = args.get("Y") * 10;
+
+                            if ((xCursor + x < sizeScreen.width) && (yCursor + y < sizeScreen.height)) {
+                                xCursor += x;
+                                yCursor += y;
+                            }
+
+                            robot.mouseMove(Math.round(xCursor), Math.round(yCursor));
                         }
                     }
             );
+
+            mouseButtonsService.getManager().getImplementation().getPropertyChangeSupport()
+                    .addPropertyChangeListener(new PropertyChangeListener() {
+                        @Override
+                        public void propertyChange(PropertyChangeEvent evt) {
+                            if (evt.getPropertyName().equals("commandeButtons")) {
+                                if (evt.getNewValue().equals("CENTRE")) {
+                                    robot.mousePress(InputEvent.BUTTON1_MASK);
+                                    robot.mouseRelease(InputEvent.BUTTON1_MASK);
+                                }
+                            }
+                        }
+                    });
 
         } catch (Exception ex) {
             System.err.println("Exception occured: " + ex);
